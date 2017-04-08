@@ -26,7 +26,7 @@
 
 ​        ｛
 
-​              "<Datepicker minDay= "2016-01-01" maxDay="2018-01-01" v-on:HandleDatepicker="HandleDatepicker"/>" 
+​              <Datepicker :minDay= 2016-01-01 :maxDay=2018-01-01" v-on:HandleDatepicker=HandleDatepicker/>
 
 ​              
 
@@ -54,7 +54,7 @@
 
 ​        
 
-​              "<AreaSelection  v-on:HandleDatepicker="HandleDatepicker"/>" 
+​              <AreaSelection  v-on:HandleDatepicker=HandleDatepicker"/>
 
 ​              HandleDatepicker: 日期选择后的回调函数（必填）
 
