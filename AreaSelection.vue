@@ -51,6 +51,12 @@ export default {
   },
 
   mounted () {
+    document.addEventListener("click", (e) => {
+      let el = e.target.nodeName
+      if (el === 'HTML') {
+          this.shows = false
+      }
+    }, false)
     this.province = provs
     this.prov_city = citys[provs[0].value]
     this.prov_dist = dists[this.prov_city[0].value]
@@ -84,8 +90,19 @@ export default {
         pos: this.pos.prov,
         fn: () => {
           let city = this.provElement.querySelector('.active').getAttribute('data-value')
-          this.cityElement.querySelector('.active').setAttribute('class', '')
-          this.distElement.querySelector('.active').setAttribute('class', '')
+          this.cityElement.style.cssText = "-webkit-transform: translateY(0px)"
+          this.distElement.style.cssText = "-webkit-transform: translateY(0px)"
+          let el1 = this.cityElement.querySelectorAll('dd')
+          let el2 = this.distElement.querySelectorAll('dd')
+          for (let i = 0; i < el1.length; i++) {
+            el1[i].setAttribute('class', '')
+          }
+          for (let i = 0; i < el2.length; i++) {
+            el2[i].setAttribute('class', '')
+          }
+
+          el1[0].setAttribute('class', 'active')
+          el2[0].setAttribute('class', 'active')
 
           let provCode = city.substr(0,3)
           let dist = provCode + '100'
@@ -94,7 +111,7 @@ export default {
           this.pos.dist = 0
           this.pos.city = 0
 
-          new _touch({
+          /*new _touch({
             element: this.cityElement,
             subElement: 'dd',
             active: 'active',
@@ -106,7 +123,7 @@ export default {
             subElement: 'dd',
             active: 'active',
             pos: 0
-          })
+          })*/
         }
        })
 
@@ -117,15 +134,22 @@ export default {
         pos: this.pos.city, 
         fn: () => {
            let dist = this.cityElement.querySelector('.active').getAttribute('data-value')
-           this.distElement.querySelector('.active').setAttribute('class', '')
+           this.distElement.style.cssText = "-webkit-transform: translateY(0px)"
+           let el2 = this.distElement.querySelectorAll('dd')
+           for (let i = 0; i < el2.length; i++) {
+            el2[i].setAttribute('class', '')
+           }
+
+           el2[0].setAttribute('class', 'active')
+
            this.prov_dist = dists[dist]
            this.pos.dist = 0
-           new _touch({
+           /*new _touch({
              element: this.distElement,
              subElement: 'dd',
              active: 'active',
              pos: 0
-          })
+          })*/
         }
        })
 
@@ -143,86 +167,13 @@ export default {
       let dists = this.$refs['dists'].querySelector('.active').innerText
       this.values = province + city + dists
       this.shows = false
-      this.$emit('HandleDatepicker', this.values)
+
+      this.$emit('HandleAreaSelection', this.values)
     }
   }
 }
 </script>
 
 <style lang='scss' scoped>
-@function toRem($px) {
-  @return 64px * $px / 75px / 32px * 1rem;
-}
-
-.modal-mask {
-  position:fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: toRem(380px);
-  background: #fff;
-  z-index: 10007;
-}
-.modal-cover {
-  position: absolute;
-  z-index: 10000;
-  height: 100%;
-  width: 100%;
-  top:0;
-  left:0;
-  background: rgba(0, 0, 0, .7);
-}
-.modal-header {
-  text-align: center;
-  width:100%;
-  line-height:toRem(98px);
-  height:toRem(120px);
-  font-size: toRem(28px);
-  position: relative;
-}
-
-.close {
-  position: absolute;
-  line-height: toRem(88px);
-  right:toRem(30px);
-  top:0;
-  color:#337bea;
-  font-size:toRem(24px)
-}
-.modal-body {
-  height: toRem(324px);
-  overflow:hidden;
-  position:relative;
-  display:flex;
-  .box {
-    flex:1;
-    position:relative;
-  }
-  dl {
-    position:absolute;
-    z-index: 10003;
-    width:100%;
-  }
-  dd {
-    height: toRem(78px);
-    text-align:center;
-    font-size:toRem(28px);
-    line-height: toRem(78px);
-    color:#9d9d9d;
-  }
-  dd.active {
-    color:#444
-  }
-  .borders {
-    color:#444;
-    position:absolute;
-    top:0;
-    left:0;
-    width:100%;
-    height:toRem(76px);
-    z-index: 10002;
-    border-top: 1px solid #c6c6c6;
-    border-bottom: 1px solid #c6c6c6
-  }
-}
+  @import './main.scss';
 </style>

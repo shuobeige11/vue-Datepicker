@@ -1,6 +1,6 @@
 <template>
   <div class="alert">
-     <section class="value" v-text="values" @click="HandleClick1"></section>
+     <section class="value"  @click="HandleClick1"></section>
      
      <section class="modal-mask" ref="mask" :style="'display:' + (!shows ? 'none' : 'block')">
         <header class="modal-header">
@@ -49,7 +49,8 @@ export default {
       yearElement: null,
       monthElement: null,
       dayElement: null,
-      values: '不限',
+      values: '',
+      val: null,      
       flag: 0,
       space: {
         year: 0,
@@ -87,7 +88,7 @@ export default {
       this.flag = 3
       this.max = '2050-12-31'
       this.min = '1980-01-01'
-      this.values = value
+      this.val = value
       return
      }
 
@@ -113,30 +114,39 @@ export default {
      let space1 = !min ? '' : (+new Date(min)) - nowDay
 
      if ( Math.ceil(max.split('/')[0]) == Math.ceil(min.split('/')[0])) {
-       this.values = this.minDay
+       this.val = this.values = this.minDay
        this.flag = 4
        return
      }
 
      if (space && space < 0) {
-       this.values = this.maxDay
+       this.val = this.values = this.maxDay
        this.flag = 1
        return
      }
 
      if(space1 && space1 > 0) {
-       this.values = this.minDay
+       this.val = this.values = this.minDay
        this.flag = 2
        return
      } 
     
      if ((space >= 0 && space1 <= 0) || (space >= 0 && !space1) || (!space && !space1 <= 0)) {
        this.flag = 3
-       this.values = value
+       this.val =this.values = value
        return
      }
   },
 
+  mounted() {
+    document.addEventListener("click", (e) => {
+      let el = e.target.nodeName
+      if (el === 'HTML') {
+          this.shows = false
+      }
+    }, false)
+  },
+  
   methods: {
     init(value) {
        let year,
@@ -211,7 +221,7 @@ export default {
 
     HandleClick1() {
       this.shows = true
-      this.init(this.values)
+      this.init(this.val)
       this.yearElement = this.$refs['year']
       this.monthElement = this.$refs['month']
       this.dayElement = this.$refs['day']
@@ -223,33 +233,30 @@ export default {
         pos: this.pos.year,
         fn: () => {
           let year = Math.ceil(this.$refs['year'].querySelector('.active').innerText)
-          this.$refs['month'].querySelector('.active').setAttribute('class', '')
-          this.$refs['day'].querySelector('.active').setAttribute('class', '')
-
-         
+          let month = Math.ceil(this.$refs['month'].querySelector('.active').innerText)
+          let dd = Math.ceil(this.$refs['day'].querySelector('.active').clientHeight)
+          let sum = 0
           if (year == this.mins.year) {
             this.creatMonth(this.min, year, 0)
           } else if(year == this.maxs.year) {
             this.creatMonth(this.max, year, 1)
           } else {
-            this.month = 0
             this.day = 0
-            this.space.month = 12 - this.month
-            let day = timers(year, this.month)
+            let day = timers(year, month)
             this.space.day = day - this.day
-            new _touch({
-              element: this.monthElement,
-              subElement: 'dd',
-              active: 'active',
-              pos: 0
-            })
             
-            new _touch({
-              element: this.dayElement,
-              subElement: 'dd',
-              active: 'active',
-              pos: 0
-            })
+
+            for (let i = 0; i < this.space.day - 1; i++) {
+              sum += dd
+            }
+            
+            let n = this.dayElement.style.transform
+            n = n.match(/\d+/g)[0]
+            if (n && Math.ceil(n) > sum) {
+              this.dayElement.querySelectorAll('dd')[this.space.day - 1].setAttribute('class', 'active')
+              this.dayElement.style.cssText = "-webkit-transform: translateY(" + Math.ceil(0 - sum) + "px)"
+            }
+
           }
         }
       })
@@ -263,27 +270,23 @@ export default {
         fn: () => {
           let year = Math.ceil(this.$refs['year'].querySelector('.active').innerText)
           let month = Math.ceil(this.$refs['month'].querySelector('.active').innerText)
-          this.$refs['day'].querySelector('.active').setAttribute('class', '')
-
-          if(year == this.mins.year && month == this.mins.month) {
-            this.creatDay(this.min, month, year, 1)
-            return
-          }
-          if(year == this.maxs.year && month == this.maxs.month) {
-            this.creatDay(this.max, month, year, 0)
-            return
-          }
-
+          let dd = Math.ceil(this.$refs['day'].querySelector('.active').clientHeight)
+          let sum = 0
+          
           this.day = 0
           let day = timers(year, month)
           this.space.day = day - this.day
-
-          new _touch({
-            element: this.dayElement,
-            subElement: 'dd',
-            active: 'active',
-            pos: 0
-          })
+          
+          for (let i = 0; i < this.space.day - 1; i++) {
+            sum += dd
+          }
+          
+          let n = this.dayElement.style.transform
+          n = n.match(/\d+/g)[0]
+          if (n && Math.ceil(n) > sum) {
+            this.dayElement.querySelectorAll('dd')[this.space.day - 1].setAttribute('class', 'active')
+            this.dayElement.style.cssText = "-webkit-transform: translateY(" + Math.ceil(0 - sum) + "px)"
+          }
         }
         
       })
@@ -297,35 +300,42 @@ export default {
 
     },
     creatMonth (value, year, flag) {
+      let years = Math.ceil(this.$refs['year'].querySelector('.active').innerText)
+      let month = Math.ceil(this.$refs['month'].querySelector('.active').innerText)
+      let dd =  Math.ceil(this.$refs['month'].querySelector('.active').clientHeight)
+      let sum = 0
+      let plus = 0
+      let day = 0
+      let el = this.monthElement.querySelectorAll('dd')
       this.month = Math.ceil(value.split('-')[1]) - 1
       this.day = Math.ceil(value.split('-')[2]) - 1
+      if(year == this.maxs.year || year == this.mins.year) {
+        this.day = 0
+      }
+
+      for (let i = 0; i < el.length; i++) {
+        el[i].setAttribute('class', '')
+      }
       if (!flag) {
         this.space.month = 12 - this.month
+        plus = month - this.month - 1
+        for (let i = 0; i < plus; i++) {
+          sum += dd
+        }
+        
+        el[plus].setAttribute('class', 'active')
+        this.monthElement.style.cssText = "-webkit-transform: translateY("+ (0 - sum) +"px)"
+        day = timers(year, month)
       } else {
         this.space.month = this.month + 1
         this.month = 0
+        el[0].setAttribute('class', 'active')
+        this.monthElement.style.cssText = "-webkit-transform: translateY(0px)"
+        day = timers(year, this.month + 1)
       }
 
-      if(year == this.maxs.year) {
-        this.day = 0
-      }
-      
-      let day = timers(year, this.month)
       this.space.day = day - this.day
 
-      new _touch({
-        element: this.monthElement,
-        subElement: 'dd',
-        active: 'active',
-        pos: 0
-      })
-      
-      new _touch({
-        element: this.dayElement,
-        subElement: 'dd',
-        active: 'active',
-        pos: 0
-      })
     },
 
     creatDay(value, month, year, flag) {
@@ -337,13 +347,6 @@ export default {
         this.space.day = this.day + 1
         this.day = 0
       }
-
-      new _touch({
-        element: this.dayElement,
-        subElement: 'dd',
-        active: 'active',
-        pos: 0
-      })
     },
 
     times() {
@@ -365,79 +368,5 @@ export default {
 </script>
 
 <style lang='scss' scoped>
-@function toRem($px) {
-  @return 64px * $px / 75px / 32px * 1rem;
-}
-
-.modal-mask {
-  position:fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: toRem(380px);
-  background: #fff;
-  z-index: 10007;
-}
-.modal-cover {
-  position: absolute;
-  z-index: 10000;
-  height: 100%;
-  width: 100%;
-  top:0;
-  left:0;
-  background: rgba(0, 0, 0, .7);
-}
-.modal-header {
-  text-align: center;
-  width:100%;
-  line-height:toRem(98px);
-  height:toRem(120px);
-  font-size: toRem(28px);
-  position: relative;
-}
-
-.close {
-  position: absolute;
-  line-height: toRem(88px);
-  right:toRem(30px);
-  top:0;
-  color:#337bea;
-  font-size:toRem(24px)
-}
-.modal-body {
-  height: toRem(324px);
-  overflow:hidden;
-  position:relative;
-  display:flex;
-  .box {
-    flex:1;
-    position:relative;
-  }
-  dl {
-    position:absolute;
-    z-index: 10003;
-    width:100%;
-  }
-  dd {
-    height: toRem(78px);
-    text-align:center;
-    font-size:toRem(28px);
-    line-height: toRem(78px);
-    color:#9d9d9d;
-  }
-  dd.active {
-    color:#444
-  }
-  .borders {
-    color:#444;
-    position:absolute;
-    top:0;
-    left:0;
-    width:100%;
-    height:toRem(76px);
-    z-index: 10002;
-    border-top: 1px solid #c6c6c6;
-    border-bottom: 1px solid #c6c6c6
-  }
-}
+  @import './main.scss';
 </style>
